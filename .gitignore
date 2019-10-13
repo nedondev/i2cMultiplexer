@@ -1,2 +1,6 @@
 __pycache__/
 
+visualize/.env
+visualize/__pycache__
+
+
