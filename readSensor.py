@@ -126,6 +126,30 @@ def initial_sensor_module(i):
     calibrate_sensors(i)
     set_last_read_angle_data(datetime.now(), 0, 0, 0, 0, 0, 0, i)
 
+def initial_all_sensor_module():
+    bus.append(smbus.SMBus(3))
+    bus.append(smbus.SMBus(4))
+    bus.append(smbus.SMBus(5))
+    for i in range(3):
+        #select communication channel
+        base_x_accel.append(0)
+        base_y_accel.append(0)
+        base_z_accel.append(0)
+        base_x_gyro.append(0)
+        base_y_gyro.append(0)
+        base_z_gyro.append(0)
+
+        last_read_time.append(0)
+        last_x_angle.append(0)
+        last_y_angle.append(0)
+        last_z_angle.append(0)
+        last_gyro_x_angle.append(0)
+        last_gyro_y_angle.append(0)
+        last_gyro_z_angle.append(0)
+
+        started.append(0)
+        initial_sensor_module(i)
+
 def read_filtered_out(i):
     if started[i] == 0:
         return {"result":-5}
@@ -199,7 +223,11 @@ def read_filtered_out(i):
     except KeyboardInterrupt:
         raise KeyboardInterrupt('The operation have been cancel by keyboard.(KeyboardInterrupt)')
 
-
+def read_all_filtered_out():
+    data = []
+    for i in range(3):
+        data.append(read_filtered_out(i))
+    return data
 
 if __name__ == "__main__":
     bus.append(smbus.SMBus(3))

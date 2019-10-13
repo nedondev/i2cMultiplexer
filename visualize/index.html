@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<link rel="shortcut icon" href='/static/hand-cursor.png'>
+	<title>Nedondev Glove</title>
+	<link rel="stylesheet" href="css/main.css">
+	<script src="/static/socket.io.js"></script>
+	<script>
+        console.log("Test");
+        var socket = io.connect();
+        console.log(socket)
+        socket.on('connect', function(data){
+            console.log("Connection established: ", data);
+            socket.emit('ping_client', data);
+        })
+	</script>
+</head>
+<body>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/109/three.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TweenMax.min.js"></script>
+    <script>
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000)
+        
+        camera.position.z = 5;
+
+        var renderer = new THREE.WebGLRenderer({antiaias:true});
+        renderer.setClearColor("#a3a3a3");
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        document.body.appendChild(renderer.domElement);
+
+        window.addEventListener('resize', ()=>{
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth/ window.innerHeight;
+
+            camera.updateProjectionMatrix();
+        })
+
+        var geometry = new THREE.BoxGeometry(2, 1, 4);
+        var material = new THREE.MeshLambertMaterial({color: 0xF7F7F7});
+        var mesh = []
+        for(var i = 0; i < 3; i++){
+            mesh.push(new THREE.Mesh(geometry, material));
+            scene.add(mesh[i]);
+            mesh[i].position.x = 8*(i/3)-8/3;
+        }
+
+        var light = new THREE.PointLight(0xFFFFFF, 2, 1000);
+        light.position.set(0,0,25);
+        scene.add(light);
+        var render = function(){
+            requestAnimationFrame(render);
+            renderer.render(scene, camera);
+        }
+        socket.on('message', function(data){
+            var data = JSON.parse(data);
+            for(var i = 0; i < data.length; i++){
+                console.log(data[i])
+                console.log("angle_x: ", data[i]['angle_x']);
+                console.log("angle_y: ", data[i]['angle_y']);
+                console.log("angle_z: ", data[i]['angle_z']);
+                mesh[i].rotation.x = THREE.Math.degToRad(data[i].angle_x);
+                mesh[i].rotation.z = THREE.Math.degToRad(data[i].angle_y);
+            }
+            socket.emit('message', {"get":"data"});
+        })
+        
+        render();
+
+    </script>
+</body>
+</html>
