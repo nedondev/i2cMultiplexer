@@ -1,6 +1,12 @@
 # i2cMultiplexer
 TCA9548A is I2C Multiplexer Module.This repository try to use it for communicate with multiple I2C module.
 
+3D box control for visualize:
+![alt text](https://raw.githubusercontent.com/nedondev/i2cMultiplexer/master/image/Multiplexer_3dbox.png)
+
+Multiplexer connect with Raspberry Pi 3 Model B+ and MPU6050:
+![alt text](https://raw.githubusercontent.com/nedondev/i2cMultiplexer/master/image/IMU_Multiplexer_diagram.svg)
+
 find i2c bus:
 ```bash
 $ i2cdetect -l
