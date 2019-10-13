@@ -1,6 +1,20 @@
 # i2cMultiplexer
 TCA9548A is I2C Multiplexer Module.This repository try to use it for communicate with multiple I2C module.
 
+find i2c bus:
+```bash
+$ i2cdetect -l
+i2c-3	i2c       	i2c-1-mux (chan_id 0)           	I2C adapter
+i2c-1	i2c       	bcm2835 I2C adapter             	I2C adapter
+i2c-8	i2c       	i2c-1-mux (chan_id 5)           	I2C adapter
+i2c-6	i2c       	i2c-1-mux (chan_id 3)           	I2C adapter
+i2c-4	i2c       	i2c-1-mux (chan_id 1)           	I2C adapter
+i2c-9	i2c       	i2c-1-mux (chan_id 6)           	I2C adapter
+i2c-10	i2c       	i2c-1-mux (chan_id 7)           	I2C adapter
+i2c-7	i2c       	i2c-1-mux (chan_id 4)           	I2C adapter
+i2c-5	i2c       	i2c-1-mux (chan_id 2)           	I2C adapter
+```
+
 smbus reference:
 IBEX UK, Limited."Using the I2C Interface"
 Available: https://raspberry-projects.com/pi/programming-in-python/i2c-programming-in-python/using-the-i2c-interface-2
