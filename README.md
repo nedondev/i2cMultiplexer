@@ -12,3 +12,5 @@ Luis Valencia. "How to read from multiplexer with python I2C TCA9548A"
 Available: https://stackoverflow.com/questions/41335921/how-to-read-from-multiplexer-with-python-i2c-tca9548a
 Texas Instruments, Inc."TCA9548A Low-Voltage 8-Channel I2C Switch with Reset datasheet (Rev. F)"
 Available: https://www.ti.com/lit/ds/symlink/tca9548a.pdf
+GeertVc."Support for I2c mux 9548 is in now?"
+Available: https://www.raspberrypi.org/forums/viewtopic.php?t=243321

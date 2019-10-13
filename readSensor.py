@@ -7,37 +7,37 @@ from datetime import datetime
 power_mgmt_1 = 0x6b
 power_mgmt_2 = 0x6c
 
-base_x_accel= 0 
-base_y_accel= 0 
-base_z_accel= 0 
-base_x_gyro = 0 
-base_y_gyro = 0 
-base_z_gyro = 0 
+base_x_accel= [] 
+base_y_accel= []
+base_z_accel= []
+base_x_gyro = [] 
+base_y_gyro = [] 
+base_z_gyro = [] 
 
-last_read_time = 0
-last_x_angle = 0
-last_y_angle = 0
-last_z_angle = 0
-last_gyro_x_angle = 0
-last_gyro_y_angle = 0
-last_gyro_z_angle = 0
+last_read_time = []
+last_x_angle = []
+last_y_angle = []
+last_z_angle = []
+last_gyro_x_angle = []
+last_gyro_y_angle = []
+last_gyro_z_angle = []
 
-bus = 0
-started = 0
+bus = []
+started = []
 address = 0
 
-def read_byte(adr):
-    return bus.read_byte_data(address, adr)
+def read_byte(adr, i):
+    return bus[i].read_byte_data(address, adr)
 
-def read_word(adr):
-    high = bus.read_byte_data(address, adr)
-    low = bus.read_byte_data(address, adr+1)
+def read_word(adr, i):
+    high = bus[i].read_byte_data(address, adr)
+    low = bus[i].read_byte_data(address, adr+1)
     val = (high << 8) + low
     return val
 
 #cause it max 16 bit data bit python is further more than that
-def read_word_2c(adr):
-    val = read_word(adr)
+def read_word_2c(adr, i):
+    val = read_word(adr, i)
     if (val >= 0x8000):
         return - (0x10000 - val)
     else :
@@ -57,7 +57,7 @@ def get_x_rotation(x,y,z):
     radians = math.atan2(y, dist(x,z))
     return math.degrees(radians)
 
-def set_last_read_angle_data(time, x, y, z, x_gyro, y_gyro, z_gyro):
+def set_last_read_angle_data(time, x, y, z, x_gyro, y_gyro, z_gyro, i):
     global last_read_time
     global last_x_angle 
     global last_y_angle 
@@ -66,16 +66,16 @@ def set_last_read_angle_data(time, x, y, z, x_gyro, y_gyro, z_gyro):
     global last_gyro_y_angle
     global last_gyro_z_angle
 
-    last_read_time = time
-    last_x_angle = x
-    last_y_angle = y
-    last_z_angle = z
-    last_gyro_x_angle = x_gyro
-    last_gyro_y_angle = y_gyro
-    last_gyro_z_angle = z_gyro
+    last_read_time[i] = time
+    last_x_angle[i] = x
+    last_y_angle[i] = y
+    last_z_angle[i] = z
+    last_gyro_x_angle[i] = x_gyro
+    last_gyro_y_angle[i]= y_gyro
+    last_gyro_z_angle[i]= z_gyro
 
-def calibrate_sensors():
-    if started == 0:
+def calibrate_sensors(i):
+    if started[i] == 0:
         return {"result":-5}
     global base_x_accel 
     global base_y_accel 
@@ -93,56 +93,59 @@ def calibrate_sensors():
     z_gyro = 0
 
     print("Calibrating...")
-    for i in range(0,num_read):
-        x_gyro += read_word_2c(0x43)
-        y_gyro += read_word_2c(0x45)
-        z_gyro += read_word_2c(0x47)
-        x_accel += read_word_2c(0x3b)
-        y_accel += read_word_2c(0x3d)
-        z_accel += read_word_2c(0x3f)
+    for count in range(0,num_read):
+        x_gyro += read_word_2c(0x43, i)
+        y_gyro += read_word_2c(0x45, i)
+        z_gyro += read_word_2c(0x47, i)
+        x_accel += read_word_2c(0x3b, i)
+        y_accel += read_word_2c(0x3d, i)
+        z_accel += read_word_2c(0x3f, i)
         time.sleep(0.1)
 
-    base_x_accel = x_accel/num_read
-    base_y_accel = y_accel/num_read 
-    base_z_accel = z_accel/num_read 
-    base_x_gyro  = x_gyro/num_read 
-    base_y_gyro  = y_gyro/num_read  
-    base_z_gyro  = z_gyro/num_read  
+    base_x_accel[i] = x_accel/num_read
+    base_y_accel[i] = y_accel/num_read 
+    base_z_accel[i] = z_accel/num_read 
+    base_x_gyro[i] = x_gyro/num_read 
+    base_y_gyro[i] = y_gyro/num_read  
+    base_z_gyro[i] = z_gyro/num_read  
     print("Done.")
 
-def initial_sensor_module():
+def initial_sensor_module(i):
     global started
     global bus
     global address
-    address = 0x70 #MPU6050 I2C adress
-    started = 1
     
+    address = 0x68
+    print("address: ", hex(address))
+    #Register 0x75 (WHO_AM_I)
+    print("WHO_AM_I: ", hex(read_byte(0x75, i)))
     #MPU6050 is in sleep mode so awake in first timeuse:
-    bus.write_byte_data(address, power_mgmt_1, 0)
+    bus[i].write_byte_data(address, power_mgmt_1, 0)
     
-    calibrate_sensors()
-    set_last_read_angle_data(datetime.now(), 0, 0, 0, 0, 0, 0)
+    started[i] = 1
+    calibrate_sensors(i)
+    set_last_read_angle_data(datetime.now(), 0, 0, 0, 0, 0, 0, i)
 
-def read_filtered_out():
-    if started == 0:
+def read_filtered_out(i):
+    if started[i] == 0:
         return {"result":-5}
     try:
-        temp_out = read_word_2c(0x41)
+        temp_out = read_word_2c(0x41, i)
     
-        gyro_xout = read_word_2c(0x43)
-        gyro_yout = read_word_2c(0x45)
-        gyro_zout = read_word_2c(0x47)
+        gyro_xout = read_word_2c(0x43, i)
+        gyro_yout = read_word_2c(0x45, i)
+        gyro_zout = read_word_2c(0x47, i)
         
-        accel_xout = read_word_2c(0x3b)
-        accel_yout = read_word_2c(0x3d)
-        accel_zout = read_word_2c(0x3f)
+        accel_xout = read_word_2c(0x3b, i)
+        accel_yout = read_word_2c(0x3d, i)
+        accel_zout = read_word_2c(0x3f, i)
 
         t_now = datetime.now()
 
         FS_SEL = 131
-        gyro_xout = (gyro_xout - base_x_gyro)/FS_SEL
-        gyro_yout = (gyro_yout - base_y_gyro)/FS_SEL
-        gyro_zout = (gyro_zout - base_z_gyro)/FS_SEL
+        gyro_xout = (gyro_xout - base_x_gyro[i])/FS_SEL
+        gyro_yout = (gyro_yout - base_y_gyro[i])/FS_SEL
+        gyro_zout = (gyro_zout - base_z_gyro[i])/FS_SEL
         
         accel_xout_scaled = accel_xout / 16384.0
         accel_yout_scaled = accel_yout / 16384.0
@@ -155,15 +158,15 @@ def read_filtered_out():
         accel_angle_z = 0
 
         # Compute the (filtered) gyro angles
-        dt = (t_now - last_read_time).microseconds/1000000
-        gyro_angle_x = gyro_xout*dt + last_x_angle
-        gyro_angle_y = gyro_yout*dt + last_y_angle
-        gyro_angle_z = gyro_zout*dt + last_z_angle
+        dt = (t_now - last_read_time[i]).microseconds/1000000
+        gyro_angle_x = gyro_xout*dt + last_x_angle[i]
+        gyro_angle_y = gyro_yout*dt + last_y_angle[i]
+        gyro_angle_z = gyro_zout*dt + last_z_angle[i]
 
         # Compute the drifting gyro angles
-        unfiltered_gyro_angle_x = gyro_xout*dt + last_gyro_x_angle
-        unfiltered_gyro_angle_y = gyro_yout*dt + last_gyro_y_angle
-        unfiltered_gyro_angle_z = gyro_zout*dt + last_gyro_z_angle
+        unfiltered_gyro_angle_x = gyro_xout*dt + last_gyro_x_angle[i]
+        unfiltered_gyro_angle_y = gyro_yout*dt + last_gyro_y_angle[i]
+        unfiltered_gyro_angle_z = gyro_zout*dt + last_gyro_z_angle[i]
 
         # Apply the complementary filter to figure out the change in angle
         # - choice of alpha is estimated now.
@@ -175,9 +178,10 @@ def read_filtered_out():
 
         # Update the saved data with the lastest values
         set_last_read_angle_data(t_now, angle_x, angle_y, angle_z,\
-                gyro_angle_x, gyro_angle_y, gyro_angle_z)
+                gyro_angle_x, gyro_angle_y, gyro_angle_z, i)
         data = {
             "result": 0,
+            "id": i,
             "delta_time":dt,
             "gyro_angle_x":gyro_angle_x,
             "gyro_angle_y":gyro_angle_y,
@@ -198,11 +202,29 @@ def read_filtered_out():
 
 
 if __name__ == "__main__":
-    bus = smbus.SMBus(1)
-    address = 0x70 #TCA9548A default I2C address
-    #select communication channel
-    bus.write_byte(address, 0)
-    time.sleep(0.1)
-    print("TCA9548A I2C channel status:", bin(bus.read_byte(address)))
-    initial_sensor_module()
+    bus.append(smbus.SMBus(3))
+    bus.append(smbus.SMBus(4))
+    bus.append(smbus.SMBus(5))
+    for i in range(3):
+        #select communication channel
+        base_x_accel.append(0)
+        base_y_accel.append(0)
+        base_z_accel.append(0)
+        base_x_gyro.append(0)
+        base_y_gyro.append(0)
+        base_z_gyro.append(0)
+
+        last_read_time.append(0)
+        last_x_angle.append(0)
+        last_y_angle.append(0)
+        last_z_angle.append(0)
+        last_gyro_x_angle.append(0)
+        last_gyro_y_angle.append(0)
+        last_gyro_z_angle.append(0)
+
+        started.append(0)
+        initial_sensor_module(i)
+    while(1):
+        for i in range(3):
+            print(read_filtered_out(i))
 
